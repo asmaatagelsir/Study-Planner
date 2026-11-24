@@ -18,11 +18,11 @@ Design
 An orange and pink palette (#F57E1E and #F52380) on a warm off-white background, with a gradient AppBar and banner and white rounded goal cards.
 Phase 1: Static screen
 Fixed content only: a gradient AppBar, a welcome banner, the heading "My Study Goals", five goal cards and an "Add goal" button that does nothing yet.
-Phase 1: ![static screen](screen_shots/PHASE1)
+![Phase 1: static screen](screenshots/PHASE1.png)
 
 Phase 2: Working list
 The goals are now stored in a list and every change updates the screen. The "Add goal" button adds a goal, tapping a card ticks it as done, and the bin icon removes it.
 Adding new goals
-Phase 2: ![adding new goals](screen_shots/PHASE2_adding_new_labels)
+![Phase 2: adding new goals](screenshots/PHASE2_adding_new_labels.png)
 Selecting and removing goals
-Phase 2: ![selecting and removing goals](screen_shots/PHASE2_selecting_and_removing_goals)
+![Phase 2: selecting and removing goals](screenshots/phase2_selecting_and_removing_goals.png)
