@@ -198,7 +198,9 @@ class _HomePageState extends State<HomePage> {
 
             // CONNECTION: ListView.builder makes one card for each goal Map
             Expanded(
-              child: ListView.builder(
+              child: goals.isEmpty? const Center(
+                child: Text('No study goals yet. Start by adding your first goal!',textAlign: TextAlign.center,),
+              )  : ListView.builder(
                 itemCount: goals.length,
                 itemBuilder: (context, index) {
                   Map<String, dynamic> goal = goals[index];
