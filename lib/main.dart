@@ -123,7 +123,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // STATIC: Heading
-            Text(
+            const Text(
               'My Study Goals',
               style: TextStyle(
                 fontSize: 24,
@@ -132,43 +132,53 @@ class _HomePageState extends State<HomePage> {
                 fontFamily: 'georgia',
               ),
             ),
-
             const SizedBox(height: 12),
 
-            // STATIC: Goals list
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.book, color: neonPink),
-                title: const Text('Python'),
-                subtitle: const Text('4 hours'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.calculate, color: neonPink),
-                title: const Text('Mathematics'),
-                subtitle: const Text('3 hours'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.code, color: neonPink),
-                title: const Text('Database Management Systems'),
-                subtitle: const Text('2 hours'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.science, color: neonPink),
-                title: const Text('Software Testing and Quality Assurance'),
-                subtitle: const Text('5 hours'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.computer, color: neonPink),
-                title: const Text('Computer Networks'),
-                subtitle: const Text('3 hours'),
+            // CONNECTION: ListView.builder makes one card for each goal Map
+            Expanded(
+              child: ListView.builder(
+                itemCount: goals.length,
+                itemBuilder: (context, index) {
+                  Map<String, dynamic> goal = goals[index];
+                  bool done = goal['done'];
+                  bool hovered = hoverdIndex == index;
+
+                  // STATIC: goal card (hover shows the checkbox and delete button)
+                  return MouseRegion(
+                    onEnter: (_) => setState(() => hoverdIndex = index),
+                    onExit: (_) => setState(() {
+                      if (hoverdIndex == index) hoverdIndex = null;
+                    }),
+                    child: Card(
+                      color: done ? Colors.grey.shade200 : Colors.white,
+                      child: ListTile(
+                        onTap: () => toggleGoal(index),
+                        leading: hovered
+                            ? Checkbox(
+                                value: done,
+                                activeColor: neonPink,
+                                onChanged: (_) => toggleGoal(index),
+                              )
+                            : Icon(iconFor(goal['subject']), color: neonPink),
+                        title: Text(
+                          goal['subject'],
+                          style: TextStyle(
+                            decoration:
+                                done ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        subtitle: Text('${goal['hours']} hours'),
+                        trailing: hovered
+                            ? IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                color: neonPink,
+                                onPressed: () => deleteGoal(index),
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -176,7 +186,8 @@ class _HomePageState extends State<HomePage> {
       ),
       // STATIC: FloatingActionButton
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        // CONNECTION: pressing the button calls the LOGIC function addGoal
+        onPressed: addGoal ,
         backgroundColor: pantoneOrange,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
