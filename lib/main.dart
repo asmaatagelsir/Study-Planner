@@ -25,15 +25,85 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // LOGIC: the goals, a list of maps with three keys
+  List<Map<String, dynamic>> goals = [
+    {'subject': 'Python', 'hours': 4, 'done': false},
+    {'subject': 'Mathematics', 'hours': 3, 'done': false},
+    {'subject': 'Database Management Systems', 'hours': 2, 'done': false},
+    {
+      'subject': 'Software Testing and Quality Assurance',
+      'hours': 5,
+      'done': false,
+    },
+    {'subject': 'Computer Networks', 'hours': 3, 'done': false},
+  ];
+  // LOGIC: three real subjects the floating button can add, one after another
+  List<Map<String, dynamic>> get sampleGoals => [
+    {'subject': 'Data Structures', 'hours': 5},
+    {'subject': 'Operating Systems', 'hours': 4},
+    {'subject': 'Web Development  ', 'hours': 2},
+  ];
+  int nextSample = 0;
+
+  // LOGIC: which card the mouse is on (null means none)
+  int? hoverdIndex;
+
+  // LOGIC: add the next sample goal (a new Map each time)
+  void addGoal() {
+    setState(() {
+      Map<String, dynamic> sample =
+          sampleGoals[nextSample % sampleGoals.length];
+      goals.add({
+        'subject': sample['subject'],
+        'hours': sample['hours'],
+        'done': false,
+      });
+      nextSample++;
+    });
+  }
+
+  // LOGIC: flip done between true and false
+  void toggleGoal(int index) {
+    setState(() {
+      goals[index]['done'] = !goals[index]['done'];
+    });
+  }
+
+  // LOGIC: remove one goal
+  void deleteGoal(int index) {
+    setState(() {
+      goals.removeAt(index);
+      hoverdIndex = null;
+    });
+  }
+
+  // LOGIC: choose an icon from the subject name
+  IconData iconFor(String subject) {
+    String name = subject.toLowerCase();
+    if (name.contains('math')) return Icons.calculate;
+    if (name.contains('python') || name.contains('web')) return Icons.code;
+    if (name.contains('network')) return Icons.computer;
+    if (name.contains('test')) return Icons.science;
+    return Icons.book;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // STATIC: AppBar
       appBar: AppBar(
-        title: const Text('My Study Planner', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'georgia')),
+        title: const Text(
+          'My Study Planner',
+          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'georgia'),
+        ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         flexibleSpace: Container(
