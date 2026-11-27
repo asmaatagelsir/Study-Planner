@@ -2,7 +2,17 @@ import 'package:flutter/material.dart';
 
 const Color pantoneOrange = Color(0xFFF57E1E);
 const Color neonPink = Color(0xFFF52380);
-
+const LinearGradient pinkGradient = LinearGradient(
+  colors: [neonPink, neonPink],
+);
+const LinearGradient orangGradient = LinearGradient(
+  colors: [pantoneOrange, pantoneOrange],
+);
+const LinearGradient mixGradien = LinearGradient(
+  colors: [pantoneOrange, neonPink],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
 void main() {
   runApp(const MyApp());
 }
@@ -95,6 +105,21 @@ class _HomePageState extends State<HomePage> {
     return Icons.book;
   }
 
+  // LOGIC: sum of all hours (fold starts at 0 and adds each goal's hours)
+  int get totalHours {
+    return goals.fold<int>(0, (sum, goal) => sum + (goal['hours'] as int));
+  }
+
+  // LOGIC: goals where done is true, then count them
+  int get completeGoals {
+    return goals.where((goal) => goal['done'] == true).length;
+  }
+
+  // LOGIC: goals not finished yet
+  int get remaininGoals {
+    return goals.length - completeGoals;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,6 +147,43 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // STATIC: Summary section (three circles from the same widget)
+            // CONNECTION: the numbers come from the LOGIC getters
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: StatCircle(
+                      value: '$totalHours',
+                      label: 'Total hours',
+                      gradient: orangGradient,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: StatCircle(
+                      value: '$completeGoals',
+                      label: 'Completed',
+                      gradient: mixGradien,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: StatCircle(
+                      value: '$remaininGoals',
+                      label:' Remaining goals',
+                      gradient: pinkGradient,
+                    ),
+                  ),
+                ),
+                
+              ],
+            ),
             // STATIC: Heading
             const Text(
               'My Study Goals',
@@ -147,37 +209,25 @@ class _HomePageState extends State<HomePage> {
                   return MouseRegion(
                     onEnter: (_) => setState(() => hoverdIndex = index),
                     onExit: (_) => setState(() {
-                      if (hoverdIndex == index) hoverdIndex = null;
-                    }),
+                      if(hoverdIndex== index) hoverdIndex = null;
+                    }) ,
                     child: Card(
-                      color: done ? Colors.grey.shade200 : Colors.white,
+                      color: hovered ? Colors.orange.shade50: done? Colors.grey.shade200: Colors.white,
                       child: ListTile(
                         onTap: () => toggleGoal(index),
-                        leading: hovered
-                            ? Checkbox(
-                                value: done,
-                                activeColor: neonPink,
-                                onChanged: (_) => toggleGoal(index),
-                              )
-                            : Icon(iconFor(goal['subject']), color: neonPink),
-                        title: Text(
-                          goal['subject'],
-                          style: TextStyle(
-                            decoration:
-                                done ? TextDecoration.lineThrough : null,
-                          ),
-                        ),
+                        leading: Checkbox(value: done, 
+                        activeColor: neonPink,
+                        onChanged: (_) => toggleGoal(index)),
+
+                        title: Text(goal['subject'], style: TextStyle(decoration: done? TextDecoration.lineThrough: null),),
                         subtitle: Text('${goal['hours']} hours'),
-                        trailing: hovered
-                            ? IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                color: neonPink,
-                                onPressed: () => deleteGoal(index),
-                              )
-                            : null,
+                        trailing: IconButton(onPressed: () => deleteGoal(index), icon: const Icon(
+                          Icons.delete_outline, color: neonPink,
+                        ),),
                       ),
                     ),
                   );
+
                 },
               ),
             ),
@@ -187,10 +237,50 @@ class _HomePageState extends State<HomePage> {
       // STATIC: FloatingActionButton
       floatingActionButton: FloatingActionButton(
         // CONNECTION: pressing the button calls the LOGIC function addGoal
-        onPressed: addGoal ,
+        onPressed: addGoal,
         backgroundColor: pantoneOrange,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class StatCircle extends StatelessWidget {
+  final String value;
+  final String label;
+  final Gradient gradient;
+
+  const StatCircle({
+    super.key,
+    required this.value,
+    required this.label,
+    required this.gradient,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Container(
+        decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
