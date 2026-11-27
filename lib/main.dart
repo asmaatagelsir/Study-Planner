@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//STATIC: colors used
 const Color pantoneOrange = Color(0xFFF57E1E);
 const Color neonPink = Color(0xFFF52380);
 const LinearGradient pinkGradient = LinearGradient(
@@ -13,13 +14,24 @@ const LinearGradient mixGradien = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
+
+AppBar gradienAppBar (String title){
+  return AppBar(
+    title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'georgia' ),),
+    backgroundColor: Colors.transparent,
+    foregroundColor: Colors.white,
+    flexibleSpace: Container(
+      decoration: const BoxDecoration(gradient: mixGradien),
+    ),
+  );
+}
+
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Study Planner',
@@ -34,7 +46,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+// hhome screen
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -55,62 +67,36 @@ class _HomePageState extends State<HomePage> {
     },
     {'subject': 'Computer Networks', 'hours': 3, 'done': false},
   ];
-  // LOGIC: three real subjects the floating button can add, one after another
-  List<Map<String, dynamic>> sampleGoals = [
-    {'subject': 'Data Structures', 'hours': 5},
-    {'subject': 'Operating Systems', 'hours': 4},
-    {'subject': 'Web Development', 'hours': 2},
-  ];
-  int nextSample = 0;
-
-  // LOGIC: which card the mouse is on (null means none)
-  int? hoverdIndex;
-
-  // LOGIC: add the next sample goal (a new Map each time)
-  void addGoal() {
+  // LOGIC: open the second screen and wait for the result
+  Future<void> addGoal() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddGoalScreen()),
+    );
+    if (result == null) return;
+    if (!mounted) return;
     setState(() {
-      Map<String, dynamic> sample =
-          sampleGoals[nextSample % sampleGoals.length];
-      goals.add({
-        'subject': sample['subject'],
-        'hours': sample['hours'],
-        'done': false,
-      });
-      nextSample++;
+      goals.add(result);
     });
   }
-
   // LOGIC: flip done between true and false
   void toggleGoal(int index) {
     setState(() {
       goals[index]['done'] = !goals[index]['done'];
     });
   }
-
-  // LOGIC: remove one goal
+  // LOGIC: remove function
   void deleteGoal(int index) {
     setState(() {
       goals.removeAt(index);
-      hoverdIndex = null;
     });
   }
-
-  // LOGIC: choose an icon from the subject name
-  IconData iconFor(String subject) {
-    String name = subject.toLowerCase();
-    if (name.contains('math')) return Icons.calculate;
-    if (name.contains('python') || name.contains('web')) return Icons.code;
-    if (name.contains('network')) return Icons.computer;
-    if (name.contains('test')) return Icons.science;
-    return Icons.book;
-  }
-
-  // LOGIC: sum of all hours (fold starts at 0 and adds each goal's hours)
+  // LOGIC: sum of all hours using fold
   int get totalHours {
     return goals.fold<int>(0, (sum, goal) => sum + (goal['hours'] as int));
   }
 
-  // LOGIC: goals where done is true, then count them
+  // LOGIC: completed goals function using where
   int get completeGoals {
     return goals.where((goal) => goal['done'] == true).length;
   }
@@ -124,64 +110,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // STATIC: AppBar
-      appBar: AppBar(
-        title: const Text(
-          'My Study Planner',
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'georgia'),
-        ),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [pantoneOrange, neonPink],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-      ),
-
+      appBar: gradienAppBar('My Study Planner'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // STATIC: Summary section (three circles from the same widget)
-            // CONNECTION: the numbers come from the LOGIC getters
+            // STATIC + CONNECTION: three circles, numbers from the getters
             Row(
               children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: StatCircle(
-                      value: '$totalHours',
-                      label: 'Total hours',
-                      gradient: orangGradient,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: StatCircle(
-                      value: '$completeGoals',
-                      label: 'Completed',
-                      gradient: mixGradien,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: StatCircle(
-                      value: '$remaininGoals',
-                      label:' Remaining goals',
-                      gradient: pinkGradient,
-                    ),
-                  ),
-                ),
-                
+                StatCircle(value: '$totalHours', label: 'Total hours', gradient: orangGradient),
+                StatCircle(value: '$completeGoals', label: 'Completed', gradient: mixGradien),
+                StatCircle(value: '$remaininGoals', label: 'Remaining', gradient: pinkGradient)
               ],
             ),
             // STATIC: Heading
@@ -196,7 +136,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
 
-            // CONNECTION: ListView.builder makes one card for each goal Map
+            // CONNECTIOn: one card for each goal map or message if no goal
             Expanded(
               child: goals.isEmpty? const Center(
                 child: Text('No study goals yet. Start by adding your first goal!',textAlign: TextAlign.center,),
@@ -205,40 +145,36 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, index) {
                   Map<String, dynamic> goal = goals[index];
                   bool done = goal['done'];
-                  bool hovered = hoverdIndex == index;
-
-                  // STATIC: goal card (hover shows the checkbox and delete button)
-                  return MouseRegion(
-                    onEnter: (_) => setState(() => hoverdIndex = index),
-                    onExit: (_) => setState(() {
-                      if(hoverdIndex== index) hoverdIndex = null;
-                    }) ,
-                    child: Card(
-                      color: hovered ? Colors.orange.shade50: done? Colors.grey.shade200: Colors.white,
-                      child: ListTile(
-                        onTap: () => toggleGoal(index),
-                        leading: Checkbox(value: done, 
+                  return Card(
+                    color: done ? Colors.orange.shade100 : Colors.white,
+                    child: ListTile(
+                      onTap: () => toggleGoal(index),
+                      leading: Checkbox(
+                        value: done,
                         activeColor: neonPink,
-                        onChanged: (_) => toggleGoal(index)),
-
-                        title: Text(goal['subject'], style: TextStyle(decoration: done? TextDecoration.lineThrough: null),),
-                        subtitle: Text('${goal['hours']} hours'),
-                        trailing: IconButton(onPressed: () => deleteGoal(index), icon: const Icon(
-                          Icons.delete_outline, color: neonPink,
-                        ),),
+                        onChanged: (_) => toggleGoal(index),
+                      ),
+                      title: Text(
+                        goal['subject'],
+                        style: TextStyle(
+                          decoration: done ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      subtitle: Text('${goal['hours']} hours'),
+                      trailing: IconButton(
+                        onPressed: () => deleteGoal(index),
+                        icon: const Icon(Icons.delete_outline, color: neonPink),
                       ),
                     ),
                   );
-
                 },
               ),
             ),
           ],
         ),
       ),
-      // STATIC: FloatingActionButton
+      // STATIC + CONNECTION: the button opens the second screen
       floatingActionButton: FloatingActionButton(
-        // CONNECTION: pressing the button calls the LOGIC function addGoal
         onPressed: addGoal,
         backgroundColor: pantoneOrange,
         foregroundColor: Colors.white,
@@ -247,7 +183,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
+// STATIC: one stat circle 
 class StatCircle extends StatelessWidget {
   final String value;
   final String label;
@@ -261,25 +197,89 @@ class StatCircle extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Container(
-        decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
+    return Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: AspectRatio(aspectRatio: 1, child: Container(decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient,),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold,),),
+        Text(label, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white),),
+      ],
+    )
+    ),),),);
+  }
+}
+// STATIC: the second screen, stateful
+class AddGoalScreen extends StatefulWidget {
+  const AddGoalScreen({super.key});
+
+  @override
+  State<AddGoalScreen> createState() => _AddGoalScreenState();
+}
+class _AddGoalScreenState extends State<AddGoalScreen> {
+  // LOGIC: read what the user types, and hold the error message
+  final TextEditingController subjectController = TextEditingController();
+  final TextEditingController hoursController = TextEditingController();
+  String? subjectError;
+  String? hoursError;
+  @override
+  void dispose() {
+    subjectController.dispose();
+    hoursController.dispose();
+    super.dispose();
+  }
+  // LOGIC: check the input, then send the goal back
+  void save() {
+    String subject = subjectController.text.trim();
+    int? hours = int.tryParse(hoursController.text.trim());
+    bool subjectOk = subject.isNotEmpty;
+    bool hoursOk = hours != null && hours > 0;
+
+    setState(() {
+      subjectError = subjectOk ? null : 'Please enter a subject';
+      hoursError = hoursOk ? null : 'Please enter whole hours above 0';
+    });
+    if(!subjectOk || !hoursOk) return; 
+    // CONNECTION: return the new goal to the home scree
+    Navigator.pop(context, {
+      'subject': subject, 'hours': hours,'done': false,
+    });
+  }
+  // STATIC: the form
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: gradienAppBar('Add Goal'),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+            TextField(
+              controller: subjectController,
+              decoration: InputDecoration(
+                labelText: 'Subject',
+                errorText: subjectError,
               ),
             ),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
+            const SizedBox(height: 16),
+            TextField(
+              controller: hoursController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Hours',
+                errorText: hoursError,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: pantoneOrange,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Save'),
+              ),
             ),
           ],
         ),
