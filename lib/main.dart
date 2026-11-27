@@ -46,10 +46,10 @@ class _HomePageState extends State<HomePage> {
     {'subject': 'Computer Networks', 'hours': 3, 'done': false},
   ];
   // LOGIC: three real subjects the floating button can add, one after another
-  List<Map<String, dynamic>> get sampleGoals => [
+  List<Map<String, dynamic>> sampleGoals = [
     {'subject': 'Data Structures', 'hours': 5},
     {'subject': 'Operating Systems', 'hours': 4},
-    {'subject': 'Web Development  ', 'hours': 2},
+    {'subject': 'Web Development', 'hours': 2},
   ];
   int nextSample = 0;
 
