@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'firebase_options.dart';
+
 
 //STATIC: colors used
 const Color pantoneOrange = Color(0xFFF57E1E);
@@ -26,12 +30,19 @@ AppBar gradienAppBar (String title){
   );
 }
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Study Planner',
@@ -56,41 +67,78 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // LOGIC: the goals, a list of maps with three keys
-  List<Map<String, dynamic>> goals = [
-    {'subject': 'Python', 'hours': 4, 'done': false},
-    {'subject': 'Mathematics', 'hours': 3, 'done': false},
-    {'subject': 'Database Management Systems', 'hours': 2, 'done': false},
-    {
-      'subject': 'Software Testing and Quality Assurance',
-      'hours': 5,
-      'done': false,
-    },
-    {'subject': 'Computer Networks', 'hours': 3, 'done': false},
-  ];
+  List<Map<String, dynamic>> goals = [];
+
+final CollectionReference goalsCollection =
+    FirebaseFirestore.instance.collection('goals');
+    @override
+void initState() {
+  super.initState();
+  loadGoals();
+}
+
+Future<void> loadGoals() async {
+  final snapshot = await goalsCollection.get();
+
+  if (!mounted) return;
+
+  setState(() {
+    goals = snapshot.docs.map((doc) {
+      return {
+        ...doc.data() as Map<String, dynamic>,
+        'id': doc.id,
+      };
+    }).toList();
+  });
+}
   // LOGIC: open the second screen and wait for the result
-  Future<void> addGoal() async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(builder: (context) => const AddGoalScreen()),
-    );
-    if (result == null) return;
-    if (!mounted) return;
-    setState(() {
-      goals.add(result);
+ Future<void> addGoal() async {
+  final result = await Navigator.push<Map<String, dynamic>>(
+    context,
+    MaterialPageRoute(builder: (context) => const AddGoalScreen()),
+  );
+
+  if (result == null) return;
+  if (!mounted) return;
+
+  final doc = await goalsCollection.add(result);
+
+  if (!mounted) return;
+
+  setState(() {
+    goals.add({
+      ...result,
+      'id': doc.id,
     });
-  }
+  });
+}
   // LOGIC: flip done between true and false
-  void toggleGoal(int index) {
-    setState(() {
-      goals[index]['done'] = !goals[index]['done'];
-    });
-  }
-  // LOGIC: remove function
-  void deleteGoal(int index) {
-    setState(() {
-      goals.removeAt(index);
-    });
-  }
+  Future<void> toggleGoal(int index) async {
+  String id = goals[index]['id'];
+  bool done = !goals[index]['done'];
+
+  await goalsCollection.doc(id).update({
+    'done': done,
+  });
+
+  if (!mounted) return;
+
+  setState(() {
+    goals[index]['done'] = done;
+  });
+}
+// LOGIC: delete a goal from Firestore and the list
+Future<void> deleteGoal(int index) async {
+  String id = goals[index]['id'];
+
+  await goalsCollection.doc(id).delete();
+
+  if (!mounted) return;
+
+  setState(() {
+    goals.removeAt(index);
+  });
+}
   // LOGIC: sum of all hours using fold
   int get totalHours {
     return goals.fold<int>(0, (sum, goal) => sum + (goal['hours'] as int));

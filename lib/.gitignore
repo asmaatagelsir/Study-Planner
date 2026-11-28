@@ -15,3 +15,13 @@ build/
 
 # macOS
 .DS_Store
+
+cat >> .gitignore <<'EOF'
+
+# Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+EOF
